@@ -9,10 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -34,122 +35,132 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class PersonaControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockBean
-    private PersonaUseCase personaUseCase;
+        @MockitoBean
+        private PersonaUseCase personaUseCase;
 
-    @Test
-    void getAll_returnsList() throws Exception {
-        given(personaUseCase.listAll()).willReturn(List.of(
-                new Persona(1L, "Juan", "juan@example.com"),
-                new Persona(2L, "Ana", "ana@example.com")
-        ));
+        @Test
+        void getAll_returnsList() throws Exception {
+                given(personaUseCase.listAll()).willReturn(List.of(
+                                new Persona(1L, "Juan", "juan@example.com"),
+                                new Persona(2L, "Ana", "ana@example.com")));
 
-        mockMvc.perform(get("/api/personas"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].nombre").value("Juan"))
-                .andExpect(jsonPath("$[1].email").value("ana@example.com"));
-    }
+                mockMvc.perform(get("/api/personas"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(2))
+                                .andExpect(jsonPath("$[0].nombre").value("Juan"))
+                                .andExpect(jsonPath("$[1].email").value("ana@example.com"));
+        }
 
-    @Test
-    void create_returnsCreated() throws Exception {
-        PersonaRequest request = new PersonaRequest();
-        request.setNombre("Juan");
-        request.setEmail("juan@example.com");
+        @Test
+        void create_returnsCreated() throws Exception {
+                PersonaRequest request = new PersonaRequest();
+                request.setNombre("Juan");
+                request.setEmail("juan@example.com");
 
-        given(personaUseCase.create(any(Persona.class)))
-                .willReturn(new Persona(1L, "Juan", "juan@example.com"));
+                given(personaUseCase.create(any(Persona.class)))
+                                .willReturn(new Persona(1L, "Juan", "juan@example.com"));
 
-        mockMvc.perform(post("/api/personas")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.nombre").value("Juan"));
-    }
+                mockMvc.perform(post("/api/personas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.nombre").value("Juan"));
+        }
 
-    @Test
-    void create_whenDuplicateEmail_returnsConflict() throws Exception {
-        PersonaRequest request = new PersonaRequest();
-        request.setNombre("Juan");
-        request.setEmail("juan@example.com");
+        @Test
+        void create_whenDuplicateEmail_returnsConflict() throws Exception {
+                PersonaRequest request = new PersonaRequest();
+                request.setNombre("Juan");
+                request.setEmail("juan@example.com");
 
-        given(personaUseCase.create(any(Persona.class)))
-                .willThrow(new DuplicateEmailException("juan@example.com"));
+                given(personaUseCase.create(any(Persona.class)))
+                                .willThrow(new DuplicateEmailException("juan@example.com"));
 
-        mockMvc.perform(post("/api/personas")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("El email ya esta registrado: juan@example.com"));
-    }
+                mockMvc.perform(post("/api/personas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.message")
+                                                .value("El email ya esta registrado: juan@example.com"));
+        }
 
-    @Test
-    void create_whenValidationFails_returnsBadRequest() throws Exception {
-        PersonaRequest request = new PersonaRequest();
-        request.setNombre(""); // invalid
-        request.setEmail("no-es-email");
+        @Test
+        void create_whenValidationFails_returnsBadRequest() throws Exception {
+                PersonaRequest request = new PersonaRequest();
+                request.setNombre("");
+                request.setEmail("no-es-email");
 
-        mockMvc.perform(post("/api/personas")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").exists());
-    }
+                mockMvc.perform(post("/api/personas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.message").exists());
+        }
 
-    @Test
-    void update_returnsOk() throws Exception {
-        PersonaRequest request = new PersonaRequest();
-        request.setNombre("Ana");
-        request.setEmail("ana@example.com");
+        @Test
+        void update_returnsOk() throws Exception {
+                PersonaRequest request = new PersonaRequest();
+                request.setNombre("Ana");
+                request.setEmail("ana@example.com");
 
-        given(personaUseCase.update(eq(1L), any(Persona.class)))
-                .willReturn(new Persona(1L, "Ana", "ana@example.com"));
+                given(personaUseCase.update(eq(1L), any(Persona.class)))
+                                .willReturn(new Persona(1L, "Ana", "ana@example.com"));
 
-        mockMvc.perform(put("/api/personas/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.nombre").value("Ana"));
-    }
+                mockMvc.perform(put("/api/personas/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombre").value("Ana"));
+        }
 
-    @Test
-    void update_whenNotFound_returns404() throws Exception {
-        PersonaRequest request = new PersonaRequest();
-        request.setNombre("Ana");
-        request.setEmail("ana@example.com");
+        @Test
+        void update_whenNotFound_returns404() throws Exception {
+                PersonaRequest request = new PersonaRequest();
+                request.setNombre("Ana");
+                request.setEmail("ana@example.com");
 
-        given(personaUseCase.update(eq(99L), any(Persona.class)))
-                .willThrow(new PersonaNotFoundException(99L));
+                given(personaUseCase.update(eq(99L), any(Persona.class)))
+                                .willThrow(new PersonaNotFoundException(99L));
 
-        mockMvc.perform(put("/api/personas/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Persona no encontrada con id 99"));
-    }
+                mockMvc.perform(put("/api/personas/99")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.message").value("Persona no encontrada con id 99"));
+        }
 
-    @Test
-    void delete_returnsOk() throws Exception {
-        doNothing().when(personaUseCase).delete(1L);
+        @Test
+        void delete_returnsOk() throws Exception {
+                doNothing().when(personaUseCase).delete(1L);
 
-        mockMvc.perform(delete("/api/personas/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Persona eliminada"));
-    }
+                mockMvc.perform(delete("/api/personas/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message").value("Persona eliminada"));
+        }
 
-    @Test
-    void delete_whenNotFound_returns404() throws Exception {
-        doThrow(new PersonaNotFoundException(9L)).when(personaUseCase).delete(9L);
+        @Test
+        void delete_whenNotFound_returns404() throws Exception {
+                doThrow(new PersonaNotFoundException(9L)).when(personaUseCase).delete(9L);
 
-        mockMvc.perform(delete("/api/personas/9"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Persona no encontrada con id 9"));
-    }
+                mockMvc.perform(delete("/api/personas/9"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.message").value("Persona no encontrada con id 9"));
+        }
+
+        @Test
+        void getAll_whenUnexpectedException_returns500() throws Exception {
+                given(personaUseCase.listAll()).willThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/personas"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.message")
+                                                .value("Error inesperado, intente nuevamente"));
+        }
 }
