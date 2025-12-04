@@ -4,6 +4,8 @@ import com.crudpersonas.app.application.ports.input.PersonaUseCase;
 import com.crudpersonas.app.domain.model.Persona;
 import com.crudpersonas.app.infrastructure.adapters.input.rest.dto.PersonaRequest;
 import com.crudpersonas.app.utils.ApiResponse;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -55,5 +58,13 @@ public class PersonaController {
 
     private Persona toDomain(PersonaRequest request) {
         return new Persona(null, request.getNombre(), request.getEmail());
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<?> getAllPaginated( //NOSONAR
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(personaUseCase.listAll(PageRequest.of(page, size)));
     }
 }

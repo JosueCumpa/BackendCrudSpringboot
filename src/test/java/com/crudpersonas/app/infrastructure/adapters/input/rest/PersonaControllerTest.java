@@ -11,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -163,4 +166,23 @@ class PersonaControllerTest {
                                 .andExpect(jsonPath("$.message")
                                                 .value("Error inesperado, intente nuevamente"));
         }
+        
+        @Test
+        void getAllPaginated_returnsPage() throws Exception {
+                Persona persona = new Persona(1L, "Juan", "juan@example.com");
+
+                PageRequest pageable = PageRequest.of(0, 10);
+                Page<Persona> pageResult = new PageImpl<>(List.of(persona), pageable, 1);
+
+                given(personaUseCase.listAll(pageable)).willReturn(pageResult);
+
+                mockMvc.perform(get("/api/personas/page")
+                                .param("page", "0")
+                                .param("size", "10"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.content.length()").value(1))
+                                .andExpect(jsonPath("$.content[0].nombre").value("Juan"))
+                                .andExpect(jsonPath("$.totalElements").value(1));
+        }
+        
 }

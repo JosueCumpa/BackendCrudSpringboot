@@ -6,6 +6,8 @@ import com.crudpersonas.app.domain.model.Persona;
 import com.crudpersonas.app.infrastructure.adapters.output.persistence.entity.PersonaEntity;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,6 +27,13 @@ public class PersonaPersistenceAdapter implements PersonaRepositoryPort {
         return personaJpaRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Page<Persona> listAll(Pageable pageable) {
+        return personaJpaRepository
+                .findAll(pageable)         // Page<PersonaEntity>
+                .map(this::toDomain);      // Page<Persona>
     }
 
     @Override

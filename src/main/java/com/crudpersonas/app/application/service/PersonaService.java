@@ -7,6 +7,9 @@ import com.crudpersonas.app.domain.exception.PersonaNotFoundException;
 import com.crudpersonas.app.domain.model.Persona;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 import java.util.List;
 
@@ -21,8 +24,15 @@ public class PersonaService implements PersonaUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Persona> listAll() {
         return personaRepositoryPort.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Persona> listAll(Pageable pageable) {
+        return personaRepositoryPort.listAll(pageable);
     }
 
     @Override

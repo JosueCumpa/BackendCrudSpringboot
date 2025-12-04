@@ -10,6 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -113,4 +117,22 @@ class PersonaServiceTest {
         verify(personaRepositoryPort).deleteById(1L);
         verifyNoMoreInteractions(personaRepositoryPort);
     }
+
+    @Test
+    void listAll_paginated_returnsData() {
+    Pageable pageable = PageRequest.of(0, 10);
+
+    Page<Persona> page = new PageImpl<>(List.of(persona), pageable, 1);
+
+    // Stub del método paginado del repositorio
+    doReturn(page).when(personaRepositoryPort).listAll(pageable);
+
+    // Llamamos al método del servicio
+    Page<Persona> result = personaService.listAll(pageable);
+
+    // Asserts
+    assertEquals(1, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertEquals("Juan", result.getContent().get(0).getNombre());
+}
 }

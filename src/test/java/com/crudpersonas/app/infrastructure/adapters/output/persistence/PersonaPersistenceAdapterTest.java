@@ -9,7 +9,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -139,5 +143,32 @@ class PersonaPersistenceAdapterTest {
         assertTrue(result.isPresent());
         assertEquals("Pame", result.get().getNombre());
         assertEquals("pame@example.com", result.get().getEmail());
+    }
+
+    @Test
+    void listAll_withPageable_returnsMappedPage() {
+    // Arrange
+    PersonaEntity e1 = new PersonaEntity();
+    e1.setId(1L);
+    e1.setNombre("Juan");
+    e1.setEmail("juan@example.com");
+
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PersonaEntity> entityPage =
+            new PageImpl<>(List.of(e1), pageable, 1);
+
+    when(personaJpaRepository.findAll(pageable))
+            .thenReturn(entityPage);
+
+    // Act
+    Page<Persona> result = adapter.listAll(pageable);
+
+    // Assert
+    assertEquals(1, result.getTotalElements());
+    assertEquals(1, result.getContent().size());
+    assertEquals("Juan", result.getContent().get(0).getNombre());
+    assertEquals("juan@example.com", result.getContent().get(0).getEmail());
+
+    verify(personaJpaRepository).findAll(pageable);
     }
 }
